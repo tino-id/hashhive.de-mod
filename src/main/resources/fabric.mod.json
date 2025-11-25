@@ -1,0 +1,28 @@
+{
+	"schemaVersion": 1,
+	"id": "hashhive",
+	"version": "${version}",
+	"name": "HashHive ChatGame Solver",
+	"description": "Automatically solves ChatGame equations",
+	"authors": [
+		"tino"
+	],
+	"contact": {},
+	"license": "MIT",
+	"icon": "assets/hashhive/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"codes.tino.hashhive.HashHiveClient"
+		]
+	},
+	"mixins": [
+		"hashhive.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.0",
+		"minecraft": ">=1.21.10",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
