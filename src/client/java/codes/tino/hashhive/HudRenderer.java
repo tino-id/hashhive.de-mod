@@ -29,13 +29,16 @@ public class HudRenderer implements HudRenderCallback {
         // Don't render if HUD is hidden (F1 mode)
         if (!client.options.hudHidden) {
             String timeText = "ChatGame: " + countdown.getFormattedTime();
+            if (ModConfig.getInstance().isAutoSubmitEnabled()) {
+                timeText += " §a[Auto]";
+            }
 
             int x = 100;
             int y = 3;
 
             // Draw black background for better visibility
-           // int textWidth = client.textRenderer.getWidth(timeText);
-           // drawContext.fill(x - 2, y - 2, x + textWidth + 2, y + 10, 0x80000000);
+            int textWidth = client.textRenderer.getWidth(timeText);
+            drawContext.fill(x - 2, y - 2, x + textWidth + 2, y + 10, 0x80000000);
 
             // Draw text with shadow for better visibility
             drawContext.drawTextWithShadow(client.textRenderer, timeText, x, y, 0xFFFFFFFF);
