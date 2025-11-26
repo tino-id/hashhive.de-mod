@@ -47,8 +47,7 @@ public class HashHiveClient implements ClientModInitializer {
 
 		// Register commands
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-			ToggleCommand.register(dispatcher);
-			AutoSendToggleCommand.register(dispatcher);
+			HashHiveCommand.register(dispatcher);
 		});
 
 		// Register chat message listener
