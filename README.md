@@ -8,8 +8,9 @@ A Minecraft Fabric mod for version 1.21.10 that automatically solves ChatGame eq
 - **Solves mathematical equations** with `+`, `-`, and `*` operators
 - **10-minute countdown timer** displayed in the top-left corner (white text with black background)
 - **Local-only solution display** in your chat (red bold text)
-- **Auto-send option** - automatically submits the solution after 1.5 seconds
+- **Auto-send option** - automatically submits the solution after 1.5-3.5 seconds (randomized)
 - **Correct operator precedence** (multiplication before addition/subtraction)
+- **Chat filter** - suppresses "You can't mine this block!" messages
 
 ## Requirements
 
@@ -61,7 +62,7 @@ All commands are under `/hh`:
 | `/hh auto disable` | Disable auto-send |
 | `/hh help` | Show all commands |
 
-**Auto-send**: When enabled, the solution is automatically sent to the server after 1.5 seconds.
+**Auto-send**: When enabled, the solution is automatically sent to the server after a random delay of 1.5-3.5 seconds.
 
 When the mod is disabled, it will not detect ChatGame events, solve equations, or display the countdown timer.
 
