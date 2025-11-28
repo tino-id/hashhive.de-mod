@@ -13,12 +13,15 @@ import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HashHiveClient implements ClientModInitializer {
 	public static final String MOD_ID = "hashhive";
 	private final AtomicBoolean expectingEquation = new AtomicBoolean(false);
-	private static final int AUTO_SEND_DELAY_TICKS = 30; // 1.5 seconds = 30 ticks
+	private static final int AUTO_SEND_MIN_TICKS = 30; // 1.5 seconds = 30 ticks
+	private static final int AUTO_SEND_MAX_TICKS = 70; // 3.5 seconds = 70 ticks
+	private final Random random = new Random();
 	private int autoSendCountdown = 0;
 	private String pendingSolution = null;
 
@@ -50,9 +53,9 @@ public class HashHiveClient implements ClientModInitializer {
 			HashHiveCommand.register(dispatcher);
 		});
 
-		// Register chat message listener
-		ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
-			handleGameMessage(message.getString());
+		// Register chat message listener with ability to cancel messages
+		ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
+			return handleGameMessage(message.getString());
 		});
 
 		// Register disconnect handler to cleanup pending tasks when leaving a server
@@ -64,22 +67,27 @@ public class HashHiveClient implements ClientModInitializer {
 		});
 	}
 
-	private void handleGameMessage(String message) {
+	private boolean handleGameMessage(String message) {
+		// Suppress "You can't mine this block!" messages
+		if (message.contains("You can't mine this block!")) {
+			return false;
+		}
+
 		// Check if mod is enabled
 		if (!ModConfig.getInstance().isEnabled()) {
-			return;
+			return true;
 		}
 
 		// Check for ChatGame Event start
 		if (message.contains("ChatGame Event")) {
 			expectingEquation.set(true);
 			CountdownManager.getInstance().startCountdown();
-			return;
+			return true;
 		}
 
 		// Check for the prompt message
 		if (expectingEquation.get() && message.contains("Solve this equation and get rewards!")) {
-			return;
+			return true;
 		}
 
 		// Check for the actual equation
@@ -100,10 +108,13 @@ public class HashHiveClient implements ClientModInitializer {
 				// Check if auto-submit is enabled
 				if (ModConfig.getInstance().isAutoSubmitEnabled()) {
 					pendingSolution = solution;
-					autoSendCountdown = AUTO_SEND_DELAY_TICKS;
+					// Random delay between 1.5 and 3.5 seconds
+					autoSendCountdown = AUTO_SEND_MIN_TICKS + random.nextInt(AUTO_SEND_MAX_TICKS - AUTO_SEND_MIN_TICKS + 1);
 				}
 			}
 		}
+
+		return true;
 	}
 
 	private void sendSolutionToServer(MinecraftClient client, String solution) {
@@ -120,32 +131,29 @@ public class HashHiveClient implements ClientModInitializer {
 			return;
 		}
 
-		CountdownManager countdown = CountdownManager.getInstance();
-		if (!countdown.isActive()) {
-			return;
-		}
-
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (client == null || client.options == null) {
 			return;
 		}
 
 		// Don't render if HUD is hidden (F1 mode)
-		if (!client.options.hudHidden) {
-			String timeText = "ChatGame: " + countdown.getFormattedTime();
-			if (ModConfig.getInstance().isAutoSubmitEnabled()) {
-				timeText += " §a[Auto]";
-			}
-
-			int x = 100;
-			int y = 3;
-
-			// Draw black background for better visibility
-			int textWidth = client.textRenderer.getWidth(timeText);
-			drawContext.fill(x - 2, y - 2, x + textWidth + 2, y + 10, 0x80000000);
-
-			// Draw text with shadow for better visibility
-			drawContext.drawTextWithShadow(client.textRenderer, timeText, x, y, 0xFFFFFFFF);
+		if (client.options.hudHidden) {
+			return;
 		}
+
+		CountdownManager countdown = CountdownManager.getInstance();
+		String timeDisplay = countdown.isActive() ? countdown.getFormattedTime() : "--:--";
+		String autoStatus = ModConfig.getInstance().isAutoSubmitEnabled() ? "§aOn" : "§cOff";
+		String timeText = timeDisplay + " §7| §fAuto: " + autoStatus;
+
+		int x = 100;
+		int y = 3;
+
+		// Draw black background for better visibility
+		int textWidth = client.textRenderer.getWidth(timeText);
+		drawContext.fill(x - 2, y - 2, x + textWidth + 2, y + 10, 0x80000000);
+
+		// Draw text with shadow for better visibility
+		drawContext.drawTextWithShadow(client.textRenderer, timeText, x, y, 0xFFFFFFFF);
 	}
 }
